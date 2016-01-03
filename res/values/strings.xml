@@ -1,0 +1,21 @@
+<resources>
+
+    <string name="app_name">FileNavigator</string>
+    <string name="open">Open</string>
+    <string name="copy">Copy</string>
+    <string name="move">Move</string>
+    <string name="delete">Delete</string><string name="paste">Paste here</string><string name="rename">Rename</string>
+    <string name="newDirectory">Create new folder</string><string name="properties">Properties</string>
+    <string name="name">Name: </string>
+    <string name="path">Path: </string>
+    <string name="permissions">Permissions: </string>
+    <string name="size">Size: </string>
+    <string name="lastTimeModified">Last time modified: </string>
+    <string name="goback">Yeah</string>
+    <string name="newFileName">new filename</string><string name="empty">Selected directory is empty</string>
+    
+    
+    
+    
+
+</resources>

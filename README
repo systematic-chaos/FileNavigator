@@ -1,0 +1,7 @@
+Android File Navigator
+
+Android application which serves as a basic file explorer.
+Besides allowing the user to traverse the directories in the filesystem and check their contents (as well as providing the typical "back", "forward", "home", and "up" buttons) it also features manipulation operations over existing directories and files (copy, move, rename, check properties), as well as the creation of new directories.
+Despite of its simplicity, it has their main advantages in its power and in the minimal usage of memory resources it makes, allowing the user to move or delete files and directories from the file system in situations where the system's own resources are nearly depleted, thus allowing this eventuality in circumstances other applications cannot operate on.
+The file creation and manipulation operations are not implemented by the application, but imported from the Apache Commons IO library.
+
