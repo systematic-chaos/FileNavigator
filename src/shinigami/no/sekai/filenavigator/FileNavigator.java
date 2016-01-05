@@ -40,7 +40,7 @@ public class FileNavigator extends FragmentActivity implements
 	protected Stack<File> mBackStack, mForwardStack;
 	protected List<NavigationItem> mListData;
 	protected int mMode;
-	protected FileFilter mFileFilter;
+	protected FileFilter mFileFilter, mDirectoryFilter;
 
 	public static final String[] KEYS = { "image1", "text1" };
 
@@ -132,7 +132,7 @@ public class FileNavigator extends FragmentActivity implements
 
 	protected File getInitialDir() {
 		File initialDir = Environment.getExternalStorageDirectory();
-		if (initialDir.isHidden() || !initialDir.canRead()) {
+		if (!mDirectoryFilter.accept(initialDir)) {
 			initialDir = new File("/");
 		}
 		return initialDir;
@@ -142,42 +142,53 @@ public class FileNavigator extends FragmentActivity implements
 		mFileFilter = new FileFilter() {
 			@Override
 			public boolean accept(File pathname) {
-				// If a file or directory is hidden, or unreadable, don't show
+				// If a file or directory is unreadable, or hidden, don't show
 				// it in the list.
-				if (pathname.isHidden())
-					return false;
-
-				if (!pathname.canRead())
-					return false;
-
-				// Show all directories and files left in the list.
-				return true;
+				// Otherwise, show all directories and files left in the list.
+				return pathname != null && pathname.canRead()
+						&& !pathname.isHidden();
 			}
 
+		};
+
+		mDirectoryFilter = new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				// Return true if the file exists, is actually a directory,
+				// can be read and listed, and it is not hidden.
+				return pathname != null && pathname.exists()
+						&& pathname.isDirectory() && pathname.canRead()
+						&& pathname.canExecute() && !pathname.isHidden();
+			}
 		};
 	}
 
 	public void loadFileList(File dir) {
-		mCurrentDir = dir;
 		String[] from = KEYS;
 		int[] to = { R.id.image1, R.id.text1 };
-		mListData = initializeFileListData(dir);
-		List<Map<String, ?>> data = new ArrayList<Map<String, ?>>(
-				mListData.size());
-		for (NavigationItem ni : mListData) {
-			data.add(ni.getMap(KEYS));
+		List<NavigationItem> fileListData = initializeFileListData(dir);
+		if (fileListData != null) {
+			mCurrentDir = dir;
+			mListData = fileListData;
+			List<Map<String, ?>> data = new ArrayList<Map<String, ?>>(
+					mListData.size());
+			for (NavigationItem ni : mListData) {
+				data.add(ni.getMap(KEYS));
+			}
+			SimpleAdapter mListAdapter = new SimpleAdapter(this, data,
+					R.layout.row, from, to);
+			mFileListView.setAdapter(mListAdapter);
 		}
-		SimpleAdapter mListAdapter = new SimpleAdapter(this, data,
-				R.layout.row, from, to);
-		mFileListView.setAdapter(mListAdapter);
 	}
 
 	protected List<NavigationItem> initializeFileListData(File dir) {
+		List<NavigationItem> adapterFiles = null;
 		File[] filesInDir = dir.listFiles(mFileFilter);
-		List<NavigationItem> adapterFiles = new ArrayList<NavigationItem>(
-				filesInDir.length);
-		for (File f : filesInDir) {
-			adapterFiles.add(createNavigationItem(f));
+		if (filesInDir != null) {
+			adapterFiles = new ArrayList<NavigationItem>(filesInDir.length);
+			for (File f : filesInDir) {
+				adapterFiles.add(createNavigationItem(f));
+			}
 		}
 		return adapterFiles;
 	}
@@ -208,30 +219,32 @@ public class FileNavigator extends FragmentActivity implements
 	}
 
 	public void back(View v) {
-		if (!mBackStack.isEmpty()) {
+		File backDir;
+		if (!mBackStack.isEmpty()
+				&& mDirectoryFilter.accept(backDir = mBackStack.pop())) {
 			mForwardStack.push(mCurrentDir);
-			loadFileList(mBackStack.pop());
+			loadFileList(backDir);
 		}
 		setupButtonsState();
 	}
 
 	public void next(View v) {
-		if (!mForwardStack.isEmpty()) {
+		File forwardDir;
+		if (!mForwardStack.isEmpty()
+				&& mDirectoryFilter.accept(forwardDir = mForwardStack.pop())) {
 			mBackStack.push(mCurrentDir);
-			loadFileList(mForwardStack.pop());
-			setupButtonsState();
+			loadFileList(forwardDir);
 		}
+		setupButtonsState();
 	}
 
 	public void up(View v) {
 		File parent = mCurrentDir.getParentFile();
-		if (parent != null) {
-			if (!parent.isHidden() && parent.canRead()) {
-				mBackStack.push(mCurrentDir);
-				loadFileList(parent);
-				mForwardStack.clear();
-				setupButtonsState();
-			}
+		if (mDirectoryFilter.accept(parent)) {
+			mBackStack.push(mCurrentDir);
+			loadFileList(parent);
+			mForwardStack.clear();
+			setupButtonsState();
 		}
 	}
 
