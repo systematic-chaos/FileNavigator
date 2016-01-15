@@ -339,12 +339,18 @@ public class FileNavigator extends FragmentActivity implements
 				mCopiedItem = null;
 			if (file.equals(mMovedItem))
 				mMovedItem = null;
-			if (mBackStack.contains(file))
-				mBackStack = (Stack<File>) mBackStack.subList(0,
-						mBackStack.indexOf(file));
-			if (mForwardStack.contains(file))
-				mForwardStack = (Stack<File>) mForwardStack.subList(0,
-						mForwardStack.indexOf(file));
+			int deletedIndex;
+			if (mBackStack.contains(file)) {
+				deletedIndex = mBackStack.indexOf(file);
+				while (mBackStack.size() > deletedIndex)
+					mBackStack.remove(deletedIndex);
+			}
+			if (mForwardStack.contains(file)) {
+				deletedIndex = mForwardStack.indexOf(file);
+				while (mForwardStack.size() > deletedIndex)
+					mForwardStack.remove(deletedIndex);
+			}
+			setupButtonsState();
 			loadFileList(mCurrentDir);
 		}
 	}
